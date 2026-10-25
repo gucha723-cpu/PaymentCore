@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/playground/">
+    <Project Path="playground/Playground.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/PaymentCore.Infrastructure/PaymentCore.Infrastructure.csproj" />
   </Folder>
