@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\src\PaymentCore.Domain\Payment.Domain.csproj" />
+    <ProjectReference Include="..\src\PaymentCore.Domain\PaymentCore.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

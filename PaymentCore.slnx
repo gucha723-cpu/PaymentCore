@@ -3,6 +3,7 @@
     <Project Path="playground/Playground.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/PaymentCore.Domain/PaymentCore.Domain.csproj" />
     <Project Path="src/PaymentCore.Infrastructure/PaymentCore.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/PaymentCore.Api/">
@@ -11,7 +12,7 @@
   <Folder Name="/src/PaymentCore.Application/">
     <Project Path="src/PaymentCore.Application/Payment.Application.csproj" />
   </Folder>
-  <Folder Name="/src/PaymentCore.Domain/">
-    <Project Path="src/PaymentCore.Domain/Payment.Domain.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/PaymentCore.Domain.Tests/PaymentCore.Domain.Tests.csproj" />
   </Folder>
 </Solution>
