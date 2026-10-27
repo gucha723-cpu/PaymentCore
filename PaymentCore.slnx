@@ -7,10 +7,10 @@
     <Project Path="src/PaymentCore.Infrastructure/PaymentCore.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/PaymentCore.Api/">
-    <Project Path="src/PaymentCore.Api/Payment.Api.csproj" />
+    <Project Path="src/PaymentCore.Api/PaymentCore.Api.csproj" />
   </Folder>
   <Folder Name="/src/PaymentCore.Application/">
-    <Project Path="src/PaymentCore.Application/Payment.Application.csproj" />
+    <Project Path="src/PaymentCore.Application/PaymentCore.Application.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PaymentCore.Domain.Tests/PaymentCore.Domain.Tests.csproj" />
