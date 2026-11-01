@@ -20,7 +20,16 @@ app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
     return Results.Ok(new { user.Id });
 });
 
+app.MapPost("/accounts",async(CreateAccountRequest request, AppDbContext db) =>
+{
+   Account account = new Account(request.UserId, request.Currency);
+   db.Accounts.Add(account);
+   await db.SaveChangesAsync();
+   return Results.Ok(new {account.Id});
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
 public record CreateUserRequest(string FirstName, string LastName, string Email);
+public record CreateAccountRequest(Guid UserId, string Currency);
