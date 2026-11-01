@@ -28,8 +28,22 @@ app.MapPost("/accounts",async(CreateAccountRequest request, AppDbContext db) =>
    return Results.Ok(new {account.Id});
 });
 
+app.MapPost("/accounts/{id}/deposit", async(Guid id, DepositRequest request, AppDbContext db) =>
+{
+   var account = await db.Accounts.FindAsync(id);
+   if (account == null)
+    {
+        return Results.NotFound();
+    } 
+    account.Deposit(request.Amount);
+    db.LedgerEntries.Add(new LedgerEntry(account.Id, request.Amount, "Пополнение"));
+    await db.SaveChangesAsync();
+    return Results.Ok(new{account.Balance});
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
 public record CreateUserRequest(string FirstName, string LastName, string Email);
 public record CreateAccountRequest(Guid UserId, string Currency);
+public record DepositRequest(decimal Amount);
