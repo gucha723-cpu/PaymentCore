@@ -41,9 +41,40 @@ app.MapPost("/accounts/{id}/deposit", async(Guid id, DepositRequest request, App
     return Results.Ok(new{account.Balance});
 });
 
+app.MapPost("/transfers", async(TransferRequest request, AppDbContext db) =>
+{
+
+    if (request.FromAccountId == request.ToAccountId)
+    {
+        return Results.BadRequest("Перевод самому себе");
+    }
+    var from = await db.Accounts.FindAsync(request.FromAccountId);
+    if (from == null)
+    {
+        return Results.NotFound();
+    }
+
+    var to = await db.Accounts.FindAsync(request.ToAccountId);
+    if (to == null)
+    {
+        return Results.NotFound();
+    }
+
+    from.Withdraw(request.Amount);
+    db.LedgerEntries.Add(new LedgerEntry(from.Id, -request.Amount, "Перевод"));
+
+    to.Deposit(request.Amount);
+    db.LedgerEntries.Add(new LedgerEntry(to.Id, request.Amount, "Перевод"));
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { FromBalance = from.Balance, ToBalance = to.Balance });
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
 public record CreateUserRequest(string FirstName, string LastName, string Email);
 public record CreateAccountRequest(Guid UserId, string Currency);
 public record DepositRequest(decimal Amount);
+public record TransferRequest(Guid FromAccountId, Guid ToAccountId, decimal Amount);
