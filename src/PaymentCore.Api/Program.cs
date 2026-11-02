@@ -71,6 +71,16 @@ app.MapPost("/transfers", async(TransferRequest request, AppDbContext db) =>
     return Results.Ok(new { FromBalance = from.Balance, ToBalance = to.Balance });
 });
 
+app.MapGet("/accounts/{id}", async(Guid id, AppDbContext db) =>
+{
+    var account = await db.Accounts.FindAsync(id);
+    if (account == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(new {account.Id, account.Currency, account.Balance});
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
