@@ -1,90 +1,32 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentCore.Domain.Entities;
 using PaymentCore.Infrastructure.Persistence;
+using PaymentCore.Application.Abstractions;
+using PaymentCore.Application.Users;
+using PaymentCore.Application.Accounts;
+using PaymentCore.Application.Transfers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+
 var app = builder.Build();
+
+app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
-{
-    User user = new User(request.FirstName, request.LastName, request.Email);
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
-    return Results.Ok(new { user.Id });
-});
-
-app.MapPost("/accounts",async(CreateAccountRequest request, AppDbContext db) =>
-{
-   Account account = new Account(request.UserId, request.Currency);
-   db.Accounts.Add(account);
-   await db.SaveChangesAsync();
-   return Results.Ok(new {account.Id});
-});
-
-app.MapPost("/accounts/{id}/deposit", async(Guid id, DepositRequest request, AppDbContext db) =>
-{
-   var account = await db.Accounts.FindAsync(id);
-   if (account == null)
-    {
-        return Results.NotFound();
-    } 
-    account.Deposit(request.Amount);
-    db.LedgerEntries.Add(new LedgerEntry(account.Id, request.Amount, "Пополнение"));
-    await db.SaveChangesAsync();
-    return Results.Ok(new{account.Balance});
-});
-
-app.MapPost("/transfers", async(TransferRequest request, AppDbContext db) =>
-{
-
-    if (request.FromAccountId == request.ToAccountId)
-    {
-        return Results.BadRequest("Перевод самому себе");
-    }
-    var from = await db.Accounts.FindAsync(request.FromAccountId);
-    if (from == null)
-    {
-        return Results.NotFound();
-    }
-
-    var to = await db.Accounts.FindAsync(request.ToAccountId);
-    if (to == null)
-    {
-        return Results.NotFound();
-    }
-
-    from.Withdraw(request.Amount);
-    db.LedgerEntries.Add(new LedgerEntry(from.Id, -request.Amount, "Перевод"));
-
-    to.Deposit(request.Amount);
-    db.LedgerEntries.Add(new LedgerEntry(to.Id, request.Amount, "Перевод"));
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok(new { FromBalance = from.Balance, ToBalance = to.Balance });
-});
-
-app.MapGet("/accounts/{id}", async(Guid id, AppDbContext db) =>
-{
-    var account = await db.Accounts.FindAsync(id);
-    if (account == null)
-    {
-        return Results.NotFound();
-    }
-    return Results.Ok(new {account.Id, account.Currency, account.Balance});
-});
 
 app.UseHttpsRedirection();
 
 app.Run();
-public record CreateUserRequest(string FirstName, string LastName, string Email);
-public record CreateAccountRequest(Guid UserId, string Currency);
-public record DepositRequest(decimal Amount);
-public record TransferRequest(Guid FromAccountId, Guid ToAccountId, decimal Amount);
+
+
