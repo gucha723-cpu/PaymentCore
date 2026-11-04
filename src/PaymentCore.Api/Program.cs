@@ -5,6 +5,7 @@ using PaymentCore.Application.Abstractions;
 using PaymentCore.Application.Users;
 using PaymentCore.Application.Accounts;
 using PaymentCore.Application.Transfers;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
