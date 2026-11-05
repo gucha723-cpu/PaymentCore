@@ -14,8 +14,13 @@ public abstract class Card : BaseEntity
     protected Card(Guid accountId, CardType type, string fullNumber, DateOnly expiryDate)
     {
         if (accountId == Guid.Empty)
-        throw new ArgumentException("Счет обязателен", nameof(accountId));
-
+        {
+            throw new ArgumentException("Счет обязателен", nameof(accountId));
+        }
+        if(string.IsNullOrWhiteSpace(fullNumber) || fullNumber.Length != 16 || !fullNumber.All(char.IsDigit))
+        {
+            throw new ArgumentException("Некорректный номер карты", nameof(fullNumber));
+        }
         AccountId = accountId;
         CardType = type;
         Last4Digits = fullNumber[^4 ..];
