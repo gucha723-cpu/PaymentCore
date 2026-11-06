@@ -51,6 +51,50 @@ namespace PaymentCore.Infrastructure.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("PaymentCore.Domain.Entities.Card", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CardType")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)");
+
+                    b.Property<DateOnly>("ExpiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Last4Digits")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("Cards");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("Card");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("PaymentCore.Domain.Entities.LedgerEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -113,6 +157,13 @@ namespace PaymentCore.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("PaymentCore.Domain.Entities.DebitCard", b =>
+                {
+                    b.HasBaseType("PaymentCore.Domain.Entities.Card");
+
+                    b.HasDiscriminator().HasValue("DebitCard");
+                });
+
             modelBuilder.Entity("PaymentCore.Domain.Entities.Account", b =>
                 {
                     b.HasOne("PaymentCore.Domain.Entities.User", "User")
@@ -122,6 +173,17 @@ namespace PaymentCore.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PaymentCore.Domain.Entities.Card", b =>
+                {
+                    b.HasOne("PaymentCore.Domain.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("PaymentCore.Domain.Entities.LedgerEntry", b =>
