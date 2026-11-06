@@ -1,8 +1,11 @@
 using System.Linq;
+using System.Text;
 namespace PaymentCore.Domain.Services;
 
 public static class CardNumberGenerator
 {
+
+    private static readonly Random Random = new Random();
     public static bool IsValid(string number)
     {
         if(string.IsNullOrEmpty(number) || number.Length != 16 || !number.All(char.IsDigit))
@@ -34,5 +37,31 @@ public static class CardNumberGenerator
 
 
         return sum % 10 == 0;
+    }
+
+    public static string Generate()
+    {
+        
+        StringBuilder RandomCardGenerator = new StringBuilder();
+
+        RandomCardGenerator.Append("400000");
+        
+        for(int i = 0; i < 9; i++)
+        {
+            RandomCardGenerator.Append(Random.Next(0,10));
+        }
+
+        for(int i = 0; i <= 9; i++)
+        {
+            RandomCardGenerator.Append(i);
+            if (IsValid(RandomCardGenerator.ToString()))
+            {
+                return RandomCardGenerator.ToString();
+            }
+
+            RandomCardGenerator.Length--;
+        }
+
+        throw new InvalidOperationException("Не удалось сгенерировать номер карты");
     }
 }

@@ -42,4 +42,26 @@ public class CardNumberGeneratorTests
 
         Assert.False(result);
     }
+
+    [Fact]
+    public void Generate_ReturnsValidNumber()
+    {
+        for(int i = 0; i < 1000; i++)
+        {
+        string number = CardNumberGenerator.Generate();
+
+        var result = CardNumberGenerator.IsValid(number);
+
+        Assert.True(result);
+        }
+    }
+
+    [Fact]
+    public void Generate_ReturnsSixteenDigitsStartingWithBin()
+    {
+        string number = CardNumberGenerator.Generate();
+
+        Assert.Equal(16, number.Length);
+        Assert.StartsWith("400000", number);
+    }
 }
