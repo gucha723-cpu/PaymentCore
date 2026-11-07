@@ -1,11 +1,10 @@
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 namespace PaymentCore.Domain.Services;
 
 public static class CardNumberGenerator
 {
-
-    private static readonly Random Random = new Random();
     public static bool IsValid(string number)
     {
         if(string.IsNullOrEmpty(number) || number.Length != 16 || !number.All(char.IsDigit))
@@ -35,7 +34,6 @@ public static class CardNumberGenerator
             counter++;
         }
 
-
         return sum % 10 == 0;
     }
 
@@ -48,7 +46,7 @@ public static class CardNumberGenerator
         
         for(int i = 0; i < 9; i++)
         {
-            RandomCardGenerator.Append(Random.Next(0,10));
+            RandomCardGenerator.Append(RandomNumberGenerator.GetInt32(0,10));
         }
 
         for(int i = 0; i <= 9; i++)
@@ -63,5 +61,10 @@ public static class CardNumberGenerator
         }
 
         throw new InvalidOperationException("Не удалось сгенерировать номер карты");
+    }
+
+    public static string GenerateCvv()
+    {
+        return RandomNumberGenerator.GetInt32(0,1000).ToString("D3");
     }
 }

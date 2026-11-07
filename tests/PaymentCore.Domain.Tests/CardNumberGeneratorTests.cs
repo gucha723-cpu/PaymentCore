@@ -64,4 +64,17 @@ public class CardNumberGeneratorTests
         Assert.Equal(16, number.Length);
         Assert.StartsWith("400000", number);
     }
+
+    [Fact]
+    public void GenerateCvv_ReturnsThreeDigitNumber()
+    {
+        for(int i = 0; i < 1000; i++)
+        {
+            string cvv = CardNumberGenerator.GenerateCvv();
+            
+
+            Assert.Equal(3, cvv.Length);
+            Assert.True(cvv.All(char.IsDigit));
+        }
+    }
 }
