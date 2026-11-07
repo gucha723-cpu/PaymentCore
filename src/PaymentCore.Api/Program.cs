@@ -6,6 +6,7 @@ using PaymentCore.Application.Users;
 using PaymentCore.Application.Accounts;
 using PaymentCore.Application.Transfers;
 using Scalar.AspNetCore;
+using PaymentCore.Application.Cards;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbConte
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
+builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 

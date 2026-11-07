@@ -40,24 +40,24 @@ public static class CardNumberGenerator
     public static string Generate()
     {
         
-        StringBuilder RandomCardGenerator = new StringBuilder();
+        StringBuilder randomCardGenerator = new StringBuilder();
 
-        RandomCardGenerator.Append("400000");
+        randomCardGenerator.Append("400000");
         
         for(int i = 0; i < 9; i++)
         {
-            RandomCardGenerator.Append(RandomNumberGenerator.GetInt32(0,10));
+            randomCardGenerator.Append(RandomNumberGenerator.GetInt32(0,10));
         }
 
         for(int i = 0; i <= 9; i++)
         {
-            RandomCardGenerator.Append(i);
-            if (IsValid(RandomCardGenerator.ToString()))
+            randomCardGenerator.Append(i);
+            if (IsValid(randomCardGenerator.ToString()))
             {
-                return RandomCardGenerator.ToString();
+                return randomCardGenerator.ToString();
             }
 
-            RandomCardGenerator.Length--;
+            randomCardGenerator.Length--;
         }
 
         throw new InvalidOperationException("Не удалось сгенерировать номер карты");

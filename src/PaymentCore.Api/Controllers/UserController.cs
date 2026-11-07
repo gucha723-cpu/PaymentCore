@@ -14,7 +14,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateAsync(CreateUserRequest request)
     {
         var id = await _service.CreateAsync(request);
         return Ok(new { Id = id });
