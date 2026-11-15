@@ -8,6 +8,7 @@ public class Account : BaseEntity
     public Guid UserId{get;private set;}
     public string Currency{get; private set;} = string.Empty;
     public decimal Balance{get;private set;}
+    public int Version{get;private set;}
 
     private Account(){}
     public Account(Guid userId, string currency)
@@ -28,6 +29,7 @@ public class Account : BaseEntity
         throw new ArgumentException("Сумма должна быть положительной", nameof(amount));
 
         Balance += amount;
+        Version++;
         Touch();
     }
 
@@ -40,6 +42,7 @@ public class Account : BaseEntity
         throw new InsufficientFundsException();
 
         Balance -= amount;
+        Version++;
         Touch();
     }
 }

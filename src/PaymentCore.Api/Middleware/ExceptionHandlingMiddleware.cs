@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PaymentCore.Domain.Exceptions;
 namespace PaymentCore.Api.Middleware;
 public class ExceptionHandlingMiddleware
@@ -41,6 +42,15 @@ public class ExceptionHandlingMiddleware
                 await context.Response.WriteAsJsonAsync(new
                 {
                     message = ex.Message
+                });
+            }
+            else if(ex is DbUpdateConcurrencyException)
+            {
+                context.Response.StatusCode = 409;
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                   message = "Счёт был изменён другим запросом. Повторите операцию." 
                 });
             }
             else

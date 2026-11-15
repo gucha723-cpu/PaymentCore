@@ -16,5 +16,8 @@ public class AppDbContext : DbContext, IAppDbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<DebitCard>();
+
+        modelBuilder.Entity<Account>().Property(a => a.Version).IsConcurrencyToken();
+
     }
 }

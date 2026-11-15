@@ -1,4 +1,5 @@
 using PaymentCore.Domain.Entities;
+using PaymentCore.Domain.Exceptions;
 
 namespace PaymentCore.Domain.Tests;
 
@@ -33,6 +34,42 @@ public class AccountTests
 
         account.Deposit(100);
 
-        Assert.Throws<InvalidOperationException>(() => account.Withdraw(500));
+        Assert.Throws<InsufficientFundsException>(() => account.Withdraw(500));
+    }
+
+    [Fact]
+    public void Deposit_IncreasesVersion()
+    {
+        var account = new Account(Guid.NewGuid(), "RUB");
+
+        account.Deposit(1000);
+
+        Assert.Equal(1, account.Version);    
+    }
+
+    [Fact]
+    public void Withdraw_IncreasesVersion()
+    {
+        var account = new Account(Guid.NewGuid(), "RUB");
+
+        account.Deposit(1000);
+
+        account.Withdraw(500);
+
+        Assert.Equal(2, account.Version);
+    }
+
+    [Fact]
+    public void Withdraw_FailedWithdrawal_DoesNotIncreaseVersion()
+    {
+        var account = new Account(Guid.NewGuid(), "RUB");
+
+        account.Deposit(100);
+
+        Assert.Throws<InsufficientFundsException>(() => account.Withdraw(1000));
+
+        Assert.Equal(1, account.Version);
+
+        Assert.Equal(100, account.Balance);
     }
 }
