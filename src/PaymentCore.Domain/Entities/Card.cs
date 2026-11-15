@@ -1,4 +1,5 @@
 using PaymentCore.Domain.Entities.Enums;
+using PaymentCore.Domain.Exceptions;
 namespace PaymentCore.Domain.Entities;
 
 public abstract class Card : BaseEntity
@@ -30,7 +31,40 @@ public abstract class Card : BaseEntity
 
     public void Block()
     {
+        EnsureNotExpired();
+
+        if(Status == CardStatus.Blocked)
+        {
+            return;
+        }
+
         Status = CardStatus.Blocked;
         Touch();
+    }
+
+    public void Unblock()
+    {
+        EnsureNotExpired();
+        
+        if(Status == CardStatus.Active)
+        {
+            return;
+        }
+
+        Status = CardStatus.Active;
+        Touch();
+    }
+
+    private void EnsureNotExpired()
+    {
+        if(ExpiryDate < DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            if(Status != CardStatus.Expired)
+            {
+                Status = CardStatus.Expired;
+                Touch();
+            }
+            throw new CardExpiredException(); 
+        }
     }
 }
