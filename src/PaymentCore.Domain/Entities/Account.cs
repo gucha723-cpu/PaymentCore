@@ -1,3 +1,4 @@
+using PaymentCore.Domain.Exceptions;
 namespace PaymentCore.Domain.Entities;
 
 public class Account : BaseEntity
@@ -36,7 +37,7 @@ public class Account : BaseEntity
         throw new ArgumentException("Сумма должна быть положительной", nameof(amount));
         
         if (Balance < amount)
-        throw new InvalidOperationException("Недостаточно средств");
+        throw new InsufficientFundsException();
 
         Balance -= amount;
         Touch();

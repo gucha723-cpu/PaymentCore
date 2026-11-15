@@ -1,5 +1,6 @@
 using PaymentCore.Application.Abstractions;
 using PaymentCore.Domain.Entities;
+using PaymentCore.Domain.Exceptions;
 
 namespace PaymentCore.Application.Transfers;
 
@@ -28,6 +29,11 @@ public class TransferService : ITransferService
     {
         throw new KeyNotFoundException("Счет получателя не найден");
     }
+
+    if(from.Currency != to.Currency)
+        {
+            throw new DifferentCurrenciesException();
+        }
 
     from.Withdraw(request.Amount);
     _db.LedgerEntries.Add(new LedgerEntry(from.Id, -request.Amount, "Перевод"));

@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PaymentCore.Domain.Entities;
 using PaymentCore.Infrastructure.Persistence;
 using PaymentCore.Application.Abstractions;
 using PaymentCore.Application.Users;
@@ -7,6 +6,7 @@ using PaymentCore.Application.Accounts;
 using PaymentCore.Application.Transfers;
 using Scalar.AspNetCore;
 using PaymentCore.Application.Cards;
+using PaymentCore.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +20,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();
 
