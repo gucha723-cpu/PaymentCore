@@ -31,8 +31,6 @@ public abstract class Card : BaseEntity
 
     public void Block()
     {
-        EnsureNotExpired();
-
         if(Status == CardStatus.Blocked)
         {
             return;

@@ -10,7 +10,7 @@ public class CardTests
     [Fact]
     public void Block_ActiveCard_ChangesStatusToBlocked()
     {
-        var expiryDate = new DateOnly(2028, 12,31);
+        var expiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
 
         var card = new DebitCard(Guid.NewGuid(), CardNumberGenerator.Generate(), expiryDate);
 
@@ -22,7 +22,7 @@ public class CardTests
     [Fact]
     public void Block_AlreadyBlockedCard_DoesNotUpdateTimestamp()
     {
-        var expiryDate = new DateOnly(2028, 12,31);
+        var expiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
 
         var card = new DebitCard(Guid.NewGuid(), CardNumberGenerator.Generate(), expiryDate);
 
@@ -41,7 +41,7 @@ public class CardTests
     [Fact]
     public void Unblock_BlockedCard_ChangesStatusToActive()
     {
-        var expiryDate = new DateOnly(2028, 12,31);
+        var expiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
 
         var card = new DebitCard(Guid.NewGuid(), CardNumberGenerator.Generate(), expiryDate);
 
@@ -65,13 +65,25 @@ public class CardTests
     }
 
     [Fact]
-    public void Block_ExpiredCard_ThrowsCardExpiredException()
+    public void Block_ExpiredCard_ChangesStatusToBlocked()
     {
         var expiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-
         var card = new DebitCard(Guid.NewGuid(), CardNumberGenerator.Generate(), expiryDate);
 
-        Assert.Throws<CardExpiredException>(() => card.Block());
+        card.Block();
+
+        Assert.Equal(CardStatus.Blocked, card.Status);
+    }
+
+    [Fact]
+    public void Unblock_ExpiredCard_ThrowsExceptionAndChangesStatusToExpired()
+    {
+        var expiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var card = new DebitCard(Guid.NewGuid(), CardNumberGenerator.Generate(), expiryDate);
+
+        card.Block();
+
+        Assert.Throws<CardExpiredException>(() => card.Unblock());
 
         Assert.Equal(CardStatus.Expired, card.Status);
     }

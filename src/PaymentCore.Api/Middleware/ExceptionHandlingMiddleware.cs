@@ -53,6 +53,15 @@ public class ExceptionHandlingMiddleware
                    message = "Счёт был изменён другим запросом. Повторите операцию." 
                 });
             }
+            else if(ex is CardExpiredException)
+            {
+                context.Response.StatusCode = 400;
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    message = "Карта просрочена"
+                });
+            }
             else
             {
                 context.Response.StatusCode = 500;
