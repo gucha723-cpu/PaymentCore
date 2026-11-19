@@ -1,6 +1,6 @@
 namespace PaymentCore.Domain.Exceptions;
 
-public class DifferentCurrenciesException : Exception
+public class DifferentCurrenciesException : DomainException
 {
     public DifferentCurrenciesException() : base("Разные валюты"){}
 }
