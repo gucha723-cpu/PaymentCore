@@ -14,5 +14,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PaymentCore.Domain.Tests/PaymentCore.Domain.Tests.csproj" />
+    <Project Path="tests/PaymentCore.IntegrationTests/PaymentCore.IntegrationTests.csproj" />
   </Folder>
 </Solution>
