@@ -45,6 +45,7 @@ namespace PaymentCore.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -156,6 +157,9 @@ namespace PaymentCore.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

@@ -19,5 +19,7 @@ public class AppDbContext : DbContext, IAppDbContext
 
         modelBuilder.Entity<Account>().Property(a => a.Version).IsConcurrencyToken();
 
+        modelBuilder.Entity<User>().HasIndex(e => e.Email).IsUnique();
+
     }
 }
