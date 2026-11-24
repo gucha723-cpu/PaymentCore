@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentCore.Application.Transfers;
 using PaymentCore.Domain.Entities;
+using PaymentCore.Domain.Exceptions;
 using PaymentCore.Infrastructure.Persistence;
 
 namespace PaymentCore.IntegrationTests;
@@ -35,8 +36,8 @@ public class TransferServiceTests
 
         await using var db = new AppDbContext(_options);
 
-        var user1 = CreateUser("Ivan", "Ivanov", "ivan@test.local");
-        var user2 = CreateUser("Egor", "Egorov", "egor@test.local");
+        var user1 = CreateUser("Ivan", "Ivanov", $"ivan{Guid.NewGuid()}@test.local");
+        var user2 = CreateUser("Egor", "Egorov", $"egor{Guid.NewGuid()}@test.local");
 
         var from = CreateAccount(user1.Id, "RUB");
         var to = CreateAccount(user2.Id, "RUB");
@@ -81,10 +82,55 @@ public class TransferServiceTests
 
         Assert.Equal(-300, fromEntry.Amount);
         Assert.Equal(300, toEntry.Amount);
+    }
 
-        
+    [Fact]
+    public async Task TransferAsync_InsufficientFunds_DoesNotChangeBalancesOrCreateLedgerEntries()
+    {
 
+        await InitializeDatabaseAsync();
+        await using var db = new AppDbContext(_options);
 
+        var user1 = CreateUser("Алексей", "Алексеев", $"alexsey{Guid.NewGuid()}@test.local");
+        var user2 = CreateUser("Сергей", "Сергеев", $"sergey{Guid.NewGuid()}@test.local");
+
+        var from = CreateAccount(user1.Id, "RUB");
+        var to = CreateAccount(user2.Id, "RUB");
+
+        from.Deposit(100);
+
+        db.Users.Add(user1);
+        db.Users.Add(user2);
+        db.Accounts.Add(from);
+        db.Accounts.Add(to);
+        await db.SaveChangesAsync();
+
+        var service = new TransferService(db);
+        var request = new TransferRequest(from.Id, to.Id, 1000);
+
+        await Assert.ThrowsAsync<InsufficientFundsException>(() => service.TransferAsync(request));
+
+        await using var newDb = new AppDbContext(_options);
+
+        var actualFrom = await newDb.Accounts.FindAsync(from.Id);
+
+        if(actualFrom == null)
+        {
+            throw new Exception("Счет отправителя не найден");
+        }
+
+        var actualTo = await newDb.Accounts.FindAsync(to.Id);
+
+        if(actualTo == null)
+        {
+            throw new Exception("Счет получателя не найден");
+        }
+
+        Assert.Equal(100, actualFrom.Balance);
+        Assert.Equal(0, actualTo.Balance);
+
+        Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualFrom.Id));
+        Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualTo.Id));
     }
 
 
