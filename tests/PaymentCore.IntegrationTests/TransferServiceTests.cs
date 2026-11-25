@@ -133,6 +133,53 @@ public class TransferServiceTests
         Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualTo.Id));
     }
 
+    [Fact]
+    public async Task TransferAsync_DifferentCurrencies_DoesNotChangeBalancesOrCreateLedgerEntries()
+    {
+        await InitializeDatabaseAsync();
+        await using var db = new AppDbContext(_options);
+
+        var user1 = CreateUser("Максим", "Максимов", $"maxim{Guid.NewGuid()}@test.local");
+        var user2 = CreateUser("Владимир", "Владимиров", $"vladimir{Guid.NewGuid()}@test.local");
+
+        var from = CreateAccount(user1.Id, "RUB");
+        var to = CreateAccount(user2.Id,"USD");
+
+        from.Deposit(1000);
+
+        db.Users.Add(user1);
+        db.Users.Add(user2);
+        db.Accounts.Add(from);
+        db.Accounts.Add(to);
+        await db.SaveChangesAsync();
+
+        var service = new TransferService(db);
+        var request = new TransferRequest(from.Id, to.Id, 1000);
+
+        await Assert.ThrowsAsync<DifferentCurrenciesException>(() => service.TransferAsync(request));
+
+        await using var newDb = new AppDbContext(_options);
+
+         var actualFrom = await newDb.Accounts.FindAsync(from.Id);
+
+        if(actualFrom == null)
+        {
+            throw new Exception("Счет отправителя не найден");
+        }
+
+        var actualTo = await newDb.Accounts.FindAsync(to.Id);
+
+        if(actualTo == null)
+        {
+            throw new Exception("Счет получателя не найден");
+        }
+
+        Assert.Equal(1000, actualFrom.Balance);
+        Assert.Equal(0, actualTo.Balance);
+
+        Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualFrom.Id));
+        Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualTo.Id));
+    }
 
     private User CreateUser(string firstName, string lastName, string email)
     {
@@ -147,4 +194,6 @@ public class TransferServiceTests
 
         return account;
     }
+
+
 }
