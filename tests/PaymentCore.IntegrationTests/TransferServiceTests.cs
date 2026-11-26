@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using PaymentCore.Application.Transfers;
 using PaymentCore.Domain.Entities;
@@ -59,17 +60,11 @@ public class TransferServiceTests
 
         var actualFrom =  await newDb.Accounts.FindAsync(from.Id);        
         
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
 
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(700, actualFrom.Balance);
         Assert.Equal(300, actualTo.Balance);
@@ -114,17 +109,11 @@ public class TransferServiceTests
 
         var actualFrom = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
 
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(100, actualFrom.Balance);
         Assert.Equal(0, actualTo.Balance);
@@ -162,17 +151,11 @@ public class TransferServiceTests
 
          var actualFrom = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
 
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(1000, actualFrom.Balance);
         Assert.Equal(0, actualTo.Balance);
@@ -207,10 +190,7 @@ public class TransferServiceTests
 
         var actualBalance = await newDb.Accounts.FindAsync(account.Id);
 
-        if(actualBalance == null)
-        {
-            throw new Exception("Счет не найден");
-        }
+        Assert.NotNull(actualBalance);
 
         Assert.Equal(100, actualBalance.Balance);
     }
@@ -236,10 +216,8 @@ public class TransferServiceTests
         await using var newDb = new AppDbContext(_options);
 
         var actualBalance = await newDb.Accounts.FindAsync(to.Id);
-        if(actualBalance == null)
-        {
-            throw new Exception("Счет не найден");
-        }
+
+        Assert.NotNull(actualBalance);
         Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == to.Id));
         Assert.Equal(0, actualBalance.Balance);
     }
@@ -267,10 +245,7 @@ public class TransferServiceTests
         
         var actualBalance = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualBalance == null)
-        {
-            throw new Exception("Счет не найден");
-        }
+        Assert.NotNull(actualBalance);
 
         Assert.Equal(100, actualBalance.Balance);
         Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == from.Id));
@@ -303,16 +278,11 @@ public class TransferServiceTests
 
         var actualFrom = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
+
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(100, actualFrom.Balance);
         Assert.Equal(0, actualTo.Balance);
@@ -347,16 +317,10 @@ public class TransferServiceTests
 
         var actualFrom = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(100, actualFrom.Balance);
         Assert.Equal(0, actualTo.Balance);
@@ -392,16 +356,10 @@ public class TransferServiceTests
 
         var actualFrom = await newDb.Accounts.FindAsync(from.Id);
 
-        if(actualFrom == null)
-        {
-            throw new Exception("Счет отправителя не найден");
-        }
+        Assert.NotNull(actualFrom);
         var actualTo = await newDb.Accounts.FindAsync(to.Id);
 
-        if(actualTo == null)
-        {
-            throw new Exception("Счет получателя не найден");
-        }
+        Assert.NotNull(actualTo);
 
         Assert.Equal(200, actualFrom.Balance);
         Assert.Equal(600, actualTo.Balance);
@@ -415,6 +373,68 @@ public class TransferServiceTests
        Assert.Equal(-300, entriesFrom[0].Amount);
        Assert.Equal(300, entriesTo[0].Amount);
     }
+
+    [Fact]
+    public async Task TransferAsync_ConcurrentTransfers_OnlyOneSucceeds()
+    {
+        await InitializeDatabaseAsync();
+        
+        var user1 = CreateUser("Геннадий", "Геннадьев", $"gena{Guid.NewGuid()}@test.local");
+        var user2 = CreateUser("Дмитрий", "Дмитрьев", $"dima{Guid.NewGuid()}@test.local");
+        var from = CreateAccount(user1.Id, "RUB");
+        var to = CreateAccount(user2.Id, "RUB");
+        from.Deposit(1000);
+
+        await using var db1 = new AppDbContext(_options);
+        await using var db2 = new AppDbContext(_options);
+
+        db1.Users.Add(user1);
+        db1.Users.Add(user2);
+        db1.Accounts.Add(from);
+        db1.Accounts.Add(to);
+        await db1.SaveChangesAsync();
+
+        var service1 = new TransferService(db1);
+        var request1 = new TransferRequest(from.Id, to.Id, 800);
+
+        var service2 = new TransferService(db2);
+        var request2 = new TransferRequest(from.Id, to.Id, 800);
+
+        var from2 = await db2.Accounts.FindAsync(from.Id);
+
+        Assert.NotNull(from2);
+
+        var to2 = await db2.Accounts.FindAsync(to.Id);
+
+        Assert.NotNull(to2);
+
+        await service1.TransferAsync(request1);
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => service2.TransferAsync(request2));
+
+        await using var newDb = new AppDbContext(_options);
+
+        var actualFrom = await newDb.Accounts.FindAsync(from.Id);
+
+        Assert.NotNull(actualFrom);
+
+        var actualTo = await newDb.Accounts.FindAsync(to.Id);
+
+        Assert.NotNull(actualTo);
+
+        Assert.Equal(200,actualFrom.Balance);
+        Assert.Equal(800,actualTo.Balance);
+
+        var entriesFrom = await newDb.LedgerEntries.Where(l => l.AccountId == actualFrom.Id).ToListAsync();
+        var entriesTo = await newDb.LedgerEntries.Where(l => l.AccountId == actualTo.Id).ToListAsync();
+
+        Assert.Single(entriesFrom);
+        Assert.Single(entriesTo);
+
+        Assert.Equal(-800, entriesFrom[0].Amount);
+        Assert.Equal(800, entriesTo[0].Amount);
+    }
+
     private User CreateUser(string firstName, string lastName, string email)
     {
         var user = new User(firstName, lastName, email);
