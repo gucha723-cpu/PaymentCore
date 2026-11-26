@@ -181,6 +181,40 @@ public class TransferServiceTests
         Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == actualTo.Id));
     }
 
+    [Fact]
+    public async Task TransferAsync_SameAccount_ThrowsArgumentException()
+    {
+        await InitializeDatabaseAsync();
+        await using var db = new AppDbContext(_options);
+
+        var user = CreateUser("Семен", "Семенов", $"semen{Guid.NewGuid()}@test.local");
+        var account = CreateAccount(user.Id, "RUB");
+
+        account.Deposit(100);
+
+        db.Users.Add(user);
+        db.Accounts.Add(account);
+        await db.SaveChangesAsync();
+
+        var service = new TransferService(db);
+        var request = new TransferRequest(account.Id, account.Id, 50);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.TransferAsync(request));
+
+        await using var newDb = new AppDbContext(_options);
+        
+        Assert.False(await newDb.LedgerEntries.AnyAsync(l => l.AccountId == account.Id));
+
+        var actualBalance = await newDb.Accounts.FindAsync(account.Id);
+
+        if(actualBalance == null)
+        {
+            throw new Exception("Счет не найден");
+        }
+
+        Assert.Equal(100, actualBalance.Balance);
+    }
+
     private User CreateUser(string firstName, string lastName, string email)
     {
         var user = new User(firstName, lastName, email);
